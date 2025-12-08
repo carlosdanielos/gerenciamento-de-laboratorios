@@ -9,7 +9,7 @@ public class Laboratorio {
     private StatusLaboratorio status;
     private List<Estacao> estacoes;
     private int capacidade;
-    private boolean isFull = estacoes.size() >= capacidade;
+
 
     public Laboratorio(String nome, int capacidadeMaxima) {
         this.nome = nome;
@@ -24,14 +24,25 @@ public class Laboratorio {
     }
 
     public void adicionarEstacao(Estacao estacao) {
-        if (!isFull) {
+        if (!isFull()) {
             estacoes.add(estacao);
             System.out.println("Estação " + estacao.getId() + " adicionada ao " + this.nome);
         } else {
             System.out.println("Laboratório " + this.nome + " está com a capacidade máxima.");
         }
     }
-    
+
+
+    private boolean isFull(){
+        if(estacoes == null){
+            return false;
+        } else if (estacoes.size() >= capacidade) {
+            return true;
+        }else{
+            return false;
+        }
+    }
+
     public String getNome(){
         return nome; 
     }
@@ -65,7 +76,7 @@ public class Laboratorio {
 
     @Override
     public String toString() {
-        return "Laboratorio [nome=" + nome + ", status=" + status + ", estacoes=" + estacoes.size() + "/" + isFull + "]";
+        return "Laboratorio [nome=" + nome + ", status=" + status + ", estacoes=" + estacoes.size() + "/" + isFull() + "]";
     }
 
 }

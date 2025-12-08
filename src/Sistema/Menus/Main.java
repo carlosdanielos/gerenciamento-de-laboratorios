@@ -90,6 +90,9 @@ public class Main {
                     if(usuarioLogado.getTipo().equals(TipoUsuario.ADMINISTRADOR)){
                         MenuAdministrador menuAdmin = new MenuAdministrador();
                         menuAdmin.iniciar(sc);
+                    }else if(usuarioLogado.getTipo().equals(TipoUsuario.PROFESSOR)){
+                        MenuProfessor menuProfessor = new MenuProfessor();
+                        menuProfessor.iniciar(sc);
                     }else{
                         System.out.println("Funcionalidades para " + usuarioLogado.getTipo() + " ainda não implementadas.");
                     }
