@@ -2,10 +2,20 @@ package Sistema.Usuarios;
 import Excecoes.*;
 
 public class Usuario {
-    
+    private String nome;
     private String matricula;
     private String senha;
     private TipoUsuario tipo;
+
+    public Usuario(TipoUsuario tipo, String nome, String matricula, String senha){
+        validarMatricula(matricula);
+        validarSenha(senha);
+
+        this.nome = nome;
+        this.tipo = tipo;
+        this.matricula = matricula;
+        this.senha = senha;
+    }
 
     public Usuario(TipoUsuario tipo, String matricula, String senha){
         validarMatricula(matricula);
@@ -42,6 +52,10 @@ public class Usuario {
 
             throw new FormatacaoSenhaInvalidaException(erro);
         }
+    }
+
+    public String getNome(){
+        return nome;
     }
 
     public String getMatricula(){

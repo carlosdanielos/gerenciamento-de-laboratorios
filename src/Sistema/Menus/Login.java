@@ -25,61 +25,51 @@ public class Login {
         while (linha != null) {
             String[] campos = linha.split(",");
 
-            String matricula = campos[0];
-            String senha = campos[1];
-            TipoUsuario tipo = TipoUsuario.valueOf(campos[2]);
+            String nome = campos[0];
+            String matricula = campos[1];
+            String senha = campos[2];
+            TipoUsuario tipo = TipoUsuario.valueOf(campos[3]);
 
-            listaLogin.add(new Usuario(tipo, matricula, senha));
+            listaLogin.add(new Usuario(tipo,nome, matricula, senha));
             linha = br.readLine();
         }
     }
 
-    public boolean verificarEspaco(Usuario a){
-        int aux = 0;
-        
-        for(Usuario i : listaLogin){
-            if(a.getMatricula().equals(i.getMatricula())){
-                if(a.getTipo() == i.getTipo()){
-                    aux++;
-                }  
+    // Verifica se a matrícula já existe
+    public boolean verificarEspaco(Usuario novoUsuario){
+        for(Usuario u : listaLogin){
+            if(novoUsuario.getMatricula().equals(u.getMatricula())){
+                return false; 
             }
         } 
-
-        return aux == 0;
+        return true; 
     }
 
-    public Usuario logar(TipoUsuario tipo, String matricula, String senha){
-        Usuario usuario = null;
-        int aux = 0;
-
+    public Usuario logar(String matricula, String senha){        
         if(listaLogin.isEmpty()){
-            System.out.println("Senha ou Usuário inválido.");
-        }else{
-            for(Usuario a : listaLogin){
-                if(matricula.equals(a.getMatricula()) && tipo.equals(a.getTipo())){
-                    if(senha.equals(a.getSenha())){
-                        aux++;
-                        usuario = a;
-                        System.out.println("Logado com sucesso.");
-                        break;
-                    }else{
-                        aux++;
-                        System.out.println("Senha ou Usuário inválido.");
-                        break;
-                    }
-                }
-            }
-            
-            if(aux == 0){
-                System.out.println("Senha ou Usuário inválido.");
-            }
+            System.out.println("Nenhum usuário cadastrado");
+            return null;
         }
 
-        return usuario;
+        // Percorre a lista procurando apenas pela matrícula
+        for(Usuario u : listaLogin){
+            if(matricula.equals(u.getMatricula())){
+                if(senha.equals(u.getSenha())){
+                    System.out.println("Logado com sucesso. Bem-vindo, " + u.getNome() + "!");
+                    return u; 
+                } else {
+                    System.out.println("Senha incorreta");
+                    return null;
+                }
+            }
+        }
+        
+        System.out.println("Usuário não encontrado");
+        return null;
     }
     
 
-    public void cadastrar(TipoUsuario tipo, String matricula, String senha){
+    public void cadastrar(TipoUsuario tipo,String nome, String matricula, String senha){
         Usuario usuario = null;
 
         switch (tipo) {
@@ -88,7 +78,6 @@ public class Login {
                 break;
         
             case PROFESSOR: 
-
                 usuario = new Professor(matricula, senha);
                 break;
                 
