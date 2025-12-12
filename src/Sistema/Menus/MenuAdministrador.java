@@ -1,8 +1,10 @@
 package Sistema.Menus;
 
 import Sistema.Lab_Est.Laboratorio;
+import Sistema.Lab_Est.Software;
 import Sistema.Lab_Est.StatusEstacao;
 import Sistema.Lab_Est.StatusLaboratorio;
+import Sistema.Lab_Est.TipoLicenca;
 import Sistema.Lab_Est.Estacao;
 
 import java.util.LinkedList;
@@ -15,22 +17,17 @@ import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.io.PrintWriter;
 
-
 public class MenuAdministrador {
-
-    // O sistema principal vai guardar a lista de TODOS os laboratórios
-    // Usamos a ListaEncadeada, pois podemos ter N laboratórios.
     private List<Laboratorio> todosOsLaboratorios;
 
     public MenuAdministrador() {
         this.todosOsLaboratorios = new LinkedList<>();
-        // Vamos adicionar um lab de exemplo
-        try(
-            FileReader fr = new FileReader("src/Arquivos/Laboratorios.txt");
-            BufferedReader br = new BufferedReader(fr);
-        ){
+        try (
+                FileReader fr = new FileReader("src/Arquivos/Laboratorios.txt");
+                BufferedReader br = new BufferedReader(fr);) {
             lerLaboratorios(br);
-        }catch(IOException e){
+            carregarSoftwares();
+        } catch (IOException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -44,7 +41,7 @@ public class MenuAdministrador {
             System.out.println("2. Gerenciar Estações");
             System.out.println("0. Deslogar");
             System.out.print("Escolha: ");
-            
+
             opcao = sc.nextInt();
             sc.nextLine(); // Limpar buffer
 
@@ -83,7 +80,7 @@ public class MenuAdministrador {
             System.out.print("Digite o nome do Laboratório (ex: LAB-01): ");
             String nome = sc.nextLine();
             Laboratorio lab = buscarLaboratorio(nome);
-            
+
             if (lab != null) {
                 StatusLaboratorio novoStatus = (op == 2) ? StatusLaboratorio.BLOQUEADO : StatusLaboratorio.ABERTO;
                 lab.setStatus(novoStatus);
@@ -91,7 +88,7 @@ public class MenuAdministrador {
             } else {
                 System.out.println("Laboratório não encontrado.");
             }
-        } else if (op == 4){
+        } else if (op == 4) {
 
             String nome;
             int capacidade;
@@ -105,15 +102,13 @@ public class MenuAdministrador {
 
             todosOsLaboratorios.add(novLaboratorio);
 
-            try(
-                FileWriter fw = new FileWriter("src/Arquivos/Laboratorios.txt", true);
-                BufferedWriter bw = new BufferedWriter(fw);
-                PrintWriter out = new PrintWriter(bw);
-                FileReader fr = new FileReader("src/Arquivos/Laboratorios.txt");
-                BufferedReader br = new BufferedReader(fr);
-            ){
-                escreverLaboratorio(br, out, novLaboratorio);
-            }catch(IOException e){
+            try (
+                    FileWriter fw = new FileWriter("src/Arquivos/Laboratorios.txt", true);
+                    BufferedWriter bw = new BufferedWriter(fw);
+                    PrintWriter out = new PrintWriter(bw);) {
+                out.println(novLaboratorio.getNome() + ", " + novLaboratorio.getCapacidade());
+                System.out.println("Laboratório salvo com sucesso!");
+            } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
 
@@ -127,62 +122,78 @@ public class MenuAdministrador {
         System.out.println("2. Registrar Manutenção (Corretiva/Preventiva)");
         System.out.println("3. Bloquear Estação");
         System.out.println("4. Liberar Estação");
-        // ... (você pode adicionar "Cadastrar Nova Estação" aqui)
+        System.out.println("5. Instalar Software na Estação");
         System.out.print("Escolha: ");
         int op = sc.nextInt();
         sc.nextLine();
 
+        listarLaboratorios();
         System.out.print("Digite o nome do Laboratório (ex: LAB-01): ");
         String nomeLab = sc.nextLine();
         Laboratorio lab = buscarLaboratorio(nomeLab);
         if (lab == null) {
             System.out.println("Laboratório não encontrado.");
-            return; // Sai do menu
+            return;
         }
 
         if (op == 1) {
-            // Lista todas as estações e seus status
-            for(int i = 0; i < lab.getEstacoes().size(); i++) {
+            for (int i = 0; i < lab.getEstacoes().size(); i++) {
                 System.out.println(lab.getEstacoes().get(i));
             }
-        } else if (op >= 2 && op <= 4) {
+        } else if (op >= 2 && op <= 5) {
             System.out.print("Digite o ID da Estação (ex: 1): ");
             int idEstacao = sc.nextInt();
             sc.nextLine();
             Estacao est = lab.getEstacaoPorId(idEstacao);
-            
+
             if (est != null) {
                 if (op == 2) {
-                    // 2. Registrar Manutenção
+                    // Registrar Manutenção
                     System.out.print("Descreva a manutenção: ");
                     String desc = sc.nextLine();
+
                     est.registrarManutencao(desc);
                 } else if (op == 3) {
-                    // 3. Bloquear Estação
+                    // Bloquear Estação
                     est.setStatus(StatusEstacao.BLOQUEADA);
-                    System.out.println("Estação " + est.getId() + " bloqueada.");
+                    System.out.println("Estação " + est.getId() + " bloqueada");
                 } else if (op == 4) {
-                    // Liberar (volta ao normal)
+                    // Liberar
                     est.setStatus(StatusEstacao.DISPONIVEL);
-                    System.out.println("Estação " + est.getId() + " liberada.");
+                    System.out.println("Estação " + est.getId() + " liberada");
+                } else if (op == 5) {
+                    System.out.print("Nome do Software: ");
+                    String nomeSw = sc.nextLine();
+
+                    System.out.print("Versão: ");
+                    String versaoSw = sc.nextLine();
+
+                    System.out.println("Tipo de Licença: (1) Gratuita ou (2) Paga");
+                    int tipoLic = sc.nextInt();
+                    sc.nextLine();
+
+                    TipoLicenca licenca = (tipoLic == 2) ? TipoLicenca.PAGA : TipoLicenca.GRATUITA;
+
+                    Software novoSoftware = new Software(nomeSw, versaoSw, licenca);
+                    est.cadastrarSoftware(novoSoftware);
+
+                    salvarSoftwareNoArquivo(lab.getNome(), est.getId(), novoSoftware);
                 }
             } else {
-                System.out.println("Estação não encontrada.");
+                System.out.println("Estação não encontrada");
             }
         }
     }
-    
-    // --- Métodos de Ajuda ---
-    
+
     private void listarLaboratorios() {
         System.out.println("\n-- Lista de Laboratórios --");
-        for(int i = 0; i < todosOsLaboratorios.size(); i++) {
+        for (int i = 0; i < todosOsLaboratorios.size(); i++) {
             System.out.println(todosOsLaboratorios.get(i));
         }
     }
 
     private Laboratorio buscarLaboratorio(String nome) {
-        for(int i = 0; i < todosOsLaboratorios.size(); i++) {
+        for (int i = 0; i < todosOsLaboratorios.size(); i++) {
             Laboratorio lab = todosOsLaboratorios.get(i);
             if (lab.getNome().equalsIgnoreCase(nome)) {
                 return lab;
@@ -191,29 +202,80 @@ public class MenuAdministrador {
         return null;
     }
 
-    private void lerLaboratorios(BufferedReader br) throws IOException{
+    private void lerLaboratorios(BufferedReader br) throws IOException {
         String linha = br.readLine();
 
-        while(linha != null){
+        while (linha != null) {
+            if (linha.trim().isEmpty()) {
+                linha = br.readLine();
+                continue;
+            }
+
             String[] campos = linha.split(",");
 
-            String nome = campos[0];
-            int capacidade = Integer.parseInt(campos[1]);
+            if (campos.length >= 2) {
+                String nome = campos[0].trim();
+                try {
+                    int capacidade = Integer.parseInt(campos[1].trim());
+                    todosOsLaboratorios.add(new Laboratorio(nome, capacidade));
+                } catch (NumberFormatException e) {
+                    System.out.println("Ignorando linha com número inválido: " + linha);
+                }
+            }
 
-            todosOsLaboratorios.add(new Laboratorio(nome, capacidade));
-            
             linha = br.readLine();
         }
     }
 
-    private void escreverLaboratorio(BufferedReader br, PrintWriter out, Laboratorio newLab) throws IOException{
-        String linha = br.readLine();
-
-        if ( linha != null) {
-            out.println();
-            out.print(newLab.getNome() + "," + newLab.getCapacidade());
-        }else{
-            out.println(newLab.getNome() + "," + newLab.getCapacidade());
-        } 
+    private void salvarSoftwareNoArquivo(String nomeLab, int idEstacao, Software sw) {
+        try (
+            FileWriter fw = new FileWriter("src/Arquivos/Softwares.txt", true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter out = new PrintWriter(bw);
+        ) {
+            String linha = nomeLab + "," + idEstacao + "," + sw.getNome() + "," + sw.getVersao() + "," + sw.getTipoLicenca();
+            out.println(linha);
+            
+        } catch (IOException e) {
+            System.out.println("Erro ao salvar software: " + e.getMessage());
+        }
     }
+
+    private void carregarSoftwares() {
+        try (BufferedReader br = new BufferedReader(new FileReader("src/Arquivos/Softwares.txt"))) {
+            String linha = br.readLine();
+
+            while (linha != null) {
+                if (linha.trim().isEmpty()) {
+                    linha = br.readLine();
+                    continue;
+                }
+
+                String[] campos = linha.split(",");
+                if (campos.length >= 5) {
+                    String nomeLab = campos[0].trim();
+                    int idEstacao = Integer.parseInt(campos[1].trim());
+                    String nomeSw = campos[2].trim();
+                    String versaoSw = campos[3].trim();
+                    String tipoStr = campos[4].trim();
+
+                    Laboratorio lab = buscarLaboratorio(nomeLab);
+                    if (lab != null) {
+                        Estacao est = lab.getEstacaoPorId(idEstacao);
+                        if (est != null) {
+                            TipoLicenca tipo = TipoLicenca.valueOf(tipoStr);
+                            Software sw = new Software(nomeSw, versaoSw, tipo);
+                            
+                            est.getSoftwares().add(sw); 
+                        }
+                    }
+                }
+                linha = br.readLine();
+            }
+        } catch (IOException e) {
+        } catch (IllegalArgumentException e) {
+            System.out.println("Erro ao ler tipo de licença no arquivo");
+        }
+    }
+
 }

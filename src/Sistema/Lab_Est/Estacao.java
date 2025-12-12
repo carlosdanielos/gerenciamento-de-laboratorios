@@ -1,6 +1,5 @@
 package Sistema.Lab_Est;
 
-
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,12 +12,14 @@ public class Estacao {
     private StatusEstacao status;
     private List<String> historicoManutencao;
     private List<Reserva> listaDeReservas;
+    private List<Software> listaSoftwares;
 
     public Estacao(int id) {
         this.id = id;
         status = StatusEstacao.DISPONIVEL;
         historicoManutencao = new LinkedList<>();
         this.listaDeReservas = new LinkedList<>();
+        this.listaSoftwares = new LinkedList<>();
     }
 
     // Método principal que o Menu chama para tentar reservar
@@ -42,6 +43,11 @@ public class Estacao {
         return true;
     }
 
+    public void cadastrarSoftware(Software software) {
+        this.listaSoftwares.add(software);
+        System.out.println("Software " + software.getNome() + " instalado na Estação " + this.id);
+    }
+
     public int getId(){ 
         return id; 
     }
@@ -57,6 +63,10 @@ public class Estacao {
     public List<Reserva> getReservas() {
         return listaDeReservas;
     }
+
+    public List<Software> getSoftwares() {
+        return listaSoftwares;
+    }
     
     public void setStatus(StatusEstacao status){
         this.status = status;
@@ -70,6 +80,6 @@ public class Estacao {
     
     @Override
     public String toString() {
-        return "Estacao [id=" + id + ", status=" + status + "]";
+        return "Estação [id = " + id + ", status = " + status + ", softwares instalados = " + listaSoftwares.size() + "]";
     }
 }

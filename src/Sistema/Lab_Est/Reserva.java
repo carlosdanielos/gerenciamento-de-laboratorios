@@ -8,11 +8,13 @@ public class Reserva {
     private Usuario usuario;
     private LocalDateTime dataInicio;
     private LocalDateTime dataFim;
+    private boolean checkInRealizado;
 
     public Reserva(Usuario usuario, LocalDateTime dataInicio, LocalDateTime dataFim) {
         this.usuario = usuario;
         this.dataInicio = dataInicio;
         this.dataFim = dataFim;
+        this.checkInRealizado = false;
     }
 
     // Getters
@@ -28,11 +30,20 @@ public class Reserva {
         return usuario;
     }
 
+    public boolean isCheckInRealizado() {
+        return checkInRealizado;
+    }
+
+    public void setCheckInRealizado(boolean checkInRealizado) {
+        this.checkInRealizado = checkInRealizado;
+    }
+
     @Override
     public String toString() {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM HH:mm");
+        String status = checkInRealizado ? " [EM USO/CONCLUÍDA]" : " [PENDENTE]";
         return "Reserva: " + usuario.getNome() + 
                " | Início: " + dataInicio.format(fmt) + 
-               " | Fim: " + dataFim.format(fmt);
+               " | Fim: " + dataFim.format(fmt) + status;
     }
 }

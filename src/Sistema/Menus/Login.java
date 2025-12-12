@@ -25,17 +25,21 @@ public class Login {
         while (linha != null) {
             String[] campos = linha.split(",");
 
-            String nome = campos[0];
-            String matricula = campos[1];
-            String senha = campos[2];
-            TipoUsuario tipo = TipoUsuario.valueOf(campos[3]);
-
-            listaLogin.add(new Usuario(tipo,nome, matricula, senha));
+            if(campos.length >= 4) {
+                String nome = campos[0];
+                String matricula = campos[1];
+                String senha = campos[2];
+                try {
+                    TipoUsuario tipo = TipoUsuario.valueOf(campos[3]);
+                    if(tipo == TipoUsuario.ALUNO) listaLogin.add(new Aluno(nome, matricula, senha));
+                    else if(tipo == TipoUsuario.PROFESSOR) listaLogin.add(new Professor(nome, matricula, senha));
+                    else if(tipo == TipoUsuario.ADMINISTRADOR) listaLogin.add(new Administrador(nome, matricula, senha));
+                } catch (IllegalArgumentException e) {}
+            }
             linha = br.readLine();
         }
     }
 
-    // Verifica se a matrícula já existe
     public boolean verificarEspaco(Usuario novoUsuario){
         for(Usuario u : listaLogin){
             if(novoUsuario.getMatricula().equals(u.getMatricula())){
@@ -45,13 +49,20 @@ public class Login {
         return true; 
     }
 
+    public Usuario buscarPorMatricula(String matricula) {
+        for (Usuario u : listaLogin) {
+            if (u.getMatricula().equals(matricula)) {
+                return u;
+            }
+        }
+        return null; 
+    }
+
     public Usuario logar(String matricula, String senha){        
         if(listaLogin.isEmpty()){
             System.out.println("Nenhum usuário cadastrado");
             return null;
         }
-
-        // Percorre a lista procurando apenas pela matrícula
         for(Usuario u : listaLogin){
             if(matricula.equals(u.getMatricula())){
                 if(senha.equals(u.getSenha())){
@@ -74,16 +85,15 @@ public class Login {
 
         switch (tipo) {
             case ALUNO:
-                usuario = new Aluno(matricula, senha);
+                usuario = new Aluno(nome, matricula, senha);
                 break;
         
             case PROFESSOR: 
-                usuario = new Professor(matricula, senha);
+                usuario = new Professor(nome, matricula, senha);
                 break;
                 
             case ADMINISTRADOR:
-
-                usuario = new Administrador(matricula, senha);
+                usuario = new Administrador(nome, matricula, senha);
                 break;
 
             default:
@@ -92,20 +102,19 @@ public class Login {
 
         if (verificarEspaco(usuario)) {
             listaLogin.add(usuario);
-
             try(
                 FileWriter fw = new FileWriter("src/Arquivos/Login.txt", true);
                 BufferedWriter bw = new BufferedWriter(fw);
                 PrintWriter out = new PrintWriter(bw);
             ){
-                out.println(usuario.getMatricula() + "," + usuario.getSenha() + "," + usuario.getTipo());
+                out.println(usuario.getNome() + "," + usuario.getMatricula() + "," + usuario.getSenha() + "," + usuario.getTipo());
 
             }catch(IOException e){
                 System.out.println(e.getMessage());
             }
 
         }else{
-            System.out.println("Usuário ja existe.");
+            System.out.println("Usuário já existe");
         }
     }
 }
