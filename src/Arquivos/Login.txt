@@ -1,3 +1,5 @@
 Lorena Pereira,112233,Loren@12,ALUNO
 Maria Aparecida,445566,M@ria123,ALUNO
 Jo�o Pedro,778899,Jo@o1234,ADMINISTRADOR
+carlos,202421190023,Teste@1234,ALUNO0
+carlos,1111,Teste@1234,PROFESSOR

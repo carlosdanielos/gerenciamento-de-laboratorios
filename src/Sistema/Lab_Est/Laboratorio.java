@@ -1,6 +1,10 @@
 package Sistema.Lab_Est;
 
 
+import Excecoes.ReservaNaoDisponivelException;
+import Sistema.Usuarios.Usuario;
+
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,6 +13,7 @@ public class Laboratorio {
     private StatusLaboratorio status;
     private List<Estacao> estacoes;
     private int capacidade;
+    private List<Reserva> listaDeReservas;
 
 
     public Laboratorio(String nome, int capacidadeMaxima) {
@@ -16,11 +21,33 @@ public class Laboratorio {
         capacidade = capacidadeMaxima;
         status = StatusLaboratorio.ABERTO;
         estacoes = new LinkedList<>();
+        this.listaDeReservas = new LinkedList<>();
 
         for (int id = 1; id <= capacidadeMaxima; id++) {
             Estacao novaEstacao = new Estacao(id); 
             this.estacoes.add(novaEstacao);     
         }
+    }
+
+    // Método principal que o Menu chama para tentar reservar
+    public boolean adicionarReserva(Usuario usuario, LocalDateTime inicio, LocalDateTime fim) throws ReservaNaoDisponivelException {
+
+        // Verifica se a estação está em manutenção (Bloqueada)
+        if (this.status != StatusLaboratorio.ABERTO) {
+            throw new ReservaNaoDisponivelException("A estação está " + this.status);
+        }
+
+        // Verifica conflito de horário com reservas existentes
+        for (Reserva r : listaDeReservas) {
+            if (inicio.isBefore(r.getFim()) && fim.isAfter(r.getInicio())) {
+                throw new ReservaNaoDisponivelException("Já existe uma reserva neste horário ("
+                        + r.getInicio().toString() + " até " + r.getFim().toString() + ")");
+            }
+        }
+
+        Reserva novaReserva = new Reserva(usuario, inicio, fim);
+        listaDeReservas.add(novaReserva);
+        return true;
     }
 
     public void adicionarEstacao(Estacao estacao) {

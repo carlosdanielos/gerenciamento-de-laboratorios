@@ -81,7 +81,7 @@ public class Main {
                                 MenuAdministrador menuAdmin = new MenuAdministrador();
                                 menuAdmin.iniciar(sc);
                             } else if (usuarioLogado.getTipo() == TipoUsuario.PROFESSOR) {
-                                MenuProfessor menuProfessor = new MenuProfessor();
+                                MenuProfessor menuProfessor = new MenuProfessor((Professor) usuarioLogado);
                                 menuProfessor.iniciar(sc);
                             } else if (usuarioLogado.getTipo() == TipoUsuario.ALUNO) {
                                 MenuAluno menuAluno = new MenuAluno((Aluno) usuarioLogado);

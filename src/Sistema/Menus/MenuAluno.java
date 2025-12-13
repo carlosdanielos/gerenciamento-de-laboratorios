@@ -222,31 +222,10 @@ public class MenuAluno {
         System.out.println("-----------------------------------------");
     }
     
-    private void salvarReservaNoArquivo(String nomeLab, int idEstacao, Sistema.Lab_Est.Reserva reserva) {
-        try (
-            FileWriter fw = new FileWriter("src/Arquivos/Reservas.txt", true);
-            BufferedWriter bw = new BufferedWriter(fw);
-            PrintWriter out = new PrintWriter(bw);
-        ) {
-            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            
-            String linha = nomeLab + ", " + 
-                           idEstacao + ", " + 
-                           reserva.getUsuario().getMatricula() + ", " + 
-                           reserva.getInicio().format(fmt) + ", " + 
-                           reserva.getFim().format(fmt);
-                           
-            out.println(linha);
-            
-        } catch (IOException e) {
-            System.out.println("Erro ao salvar reserva no arquivo: " + e.getMessage());
-        }
-    }
-
     private void carregarReservasDoArquivo() {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-        try (BufferedReader br = new BufferedReader(new FileReader("src/Arquivos/Reservas.txt"))) {
+        try (BufferedReader br = new BufferedReader(new FileReader("src/Arquivos/ReservasEstacao.txt"))) {
             String linha = br.readLine();
 
             while (linha != null) {
@@ -254,7 +233,7 @@ public class MenuAluno {
                 if (campos.length >= 5) {
                     String nomeLab = campos[0].trim();
                     int idEstacao = Integer.parseInt(campos[1].trim());
-                    String matriculaNoArquivo = campos[2].trim(); 
+                    String matriculaNoArquivo = campos[2].trim();
                     LocalDateTime inicio = LocalDateTime.parse(campos[3].trim(), fmt);
                     LocalDateTime fim = LocalDateTime.parse(campos[4].trim(), fmt);
 
@@ -279,6 +258,27 @@ public class MenuAluno {
             }
         } catch (IOException e) {
             System.out.println("Nenhuma reserva anterior encontrada");
+        }
+
+    }
+    private void salvarReservaNoArquivo(String nomeLab, int idEstacao, Sistema.Lab_Est.Reserva reserva) {
+        try (
+                FileWriter fw = new FileWriter("src/Arquivos/ReservasEstacao.txt", true);
+                BufferedWriter bw = new BufferedWriter(fw);
+                PrintWriter out = new PrintWriter(bw);
+        ) {
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+            String linha = nomeLab + ", " +
+                    idEstacao + ", " +
+                    reserva.getUsuario().getMatricula() + ", " +
+                    reserva.getInicio().format(fmt) + ", " +
+                    reserva.getFim().format(fmt);
+
+            out.println(linha);
+
+        } catch (IOException e) {
+            System.out.println("Erro ao salvar reserva no arquivo: " + e.getMessage());
         }
     }
 

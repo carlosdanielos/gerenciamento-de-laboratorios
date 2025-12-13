@@ -69,7 +69,7 @@ public class Login {
                     System.out.println("Logado com sucesso. Bem-vindo, " + u.getNome() + "!");
                     return u; 
                 } else {
-                    System.out.println("Senha incorreta");
+                    System.out.println("Senha ou usuário incorreto!");
                     return null;
                 }
             }

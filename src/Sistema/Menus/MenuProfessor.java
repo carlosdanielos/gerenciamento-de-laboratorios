@@ -1,16 +1,17 @@
 package Sistema.Menus;
 
-import Sistema.Lab_Est.Laboratorio;
-import Sistema.Lab_Est.StatusEstacao;
-import Sistema.Lab_Est.StatusLaboratorio;
+import Excecoes.ParametroNaoValidoException;
+import Excecoes.ReservaNaoDisponivelException;
+import Sistema.Lab_Est.*;
+import Sistema.Usuarios.Aluno;
+import Sistema.Usuarios.Professor;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -20,9 +21,12 @@ public class MenuProfessor {
     // O sistema principal vai guardar a lista de TODOS os laboratórios
     // Usamos a ListaEncadeada, pois podemos ter N laboratórios.
     private List<Laboratorio> todosOsLaboratorios;
+    private Professor professor;
 
-    public MenuProfessor() {
+    public MenuProfessor(Professor professor) {
+        this.professor = professor;
         this.todosOsLaboratorios = new LinkedList<>();
+        carregarReservasDoArquivo();
         // Vamos adicionar um lab de exemplo
         try(
                 FileReader fr = new FileReader("src/Arquivos/Laboratorios.txt");
@@ -79,30 +83,86 @@ public class MenuProfessor {
 
         switch (op){
             case 1:
-                DateTimeFormatter formato = DateTimeFormatter.ofPattern("HH:mm");
+                try{
+                    DateTimeFormatter formatoHorario = DateTimeFormatter.ofPattern("HH:mm");
+                    DateTimeFormatter formatoData = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-                System.out.println("Informe o horário a ser reservado.");
-                System.out.println("Início: ");
 
-                String input = sc.nextLine();
+                    System.out.println("Informe a data de reserva: ");
+                    LocalDate data = LocalDate.parse(sc.nextLine(), formatoData);
 
-                LocalTime horarioInicio = LocalTime.parse(input, formato);
+                    System.out.println("Informe o horário a ser reservado.");
 
-                listarLaboratorios();
-                System.out.println("Digite o nome do Laboratório (ex: LAB-01): ");
-                String nome = sc.nextLine();
-                Laboratorio lab = buscarLaboratorio(nome);
+                    System.out.println("Início: ");
+                    LocalTime horarioInicio = LocalTime.parse(sc.nextLine(), formatoHorario);
+                    LocalDateTime inicioCompleto = LocalDateTime.of(data, horarioInicio);
 
-                if (lab != null) {
-                    StatusLaboratorio novoStatus = StatusLaboratorio.BLOQUEADO;
-                    lab.setStatus(novoStatus);
-                    System.out.println(lab.getNome() + " agora está " + lab.getStatus());
-                } else {
-                    System.out.println("Laboratório não encontrado.");
+                    System.out.println("Fim: ");
+                    LocalTime horarioFim = LocalTime.parse(sc.nextLine(), formatoHorario);
+                    LocalDateTime fimCompleto = LocalDateTime.of(data, horarioFim);
+
+                    if (fimCompleto.isBefore(inicioCompleto) || fimCompleto.isEqual(inicioCompleto)) {
+                        throw new ParametroNaoValidoException("Erro: O horário/data de término deve ser posterior ao início");
+                    }
+
+                    listarLaboratorios();
+                    System.out.println("Digite o nome do Laboratório (ex: LAB-01): ");
+                    String nome = sc.nextLine();
+                    Laboratorio lab = buscarLaboratorio(nome);
+
+                    if (lab == null) {
+                        System.out.println("Laboratório não encontrado");
+                        return;
+                    }
+
+                    if(lab.getStatus() == StatusLaboratorio.BLOQUEADO){
+                        System.out.println("Esse laboratório está momentaneamente bloqueado e não pode ser reservado!");
+                        return;
+                    }
+
+                    boolean reservou = lab.adicionarReserva(this.professor, inicioCompleto, fimCompleto);
+
+                    if (reservou) {
+                        System.out.println("Reserva realizada com sucesso!");
+                        Sistema.Lab_Est.Reserva rTemp = new Sistema.Lab_Est.Reserva(this.professor, inicioCompleto, fimCompleto);
+                        salvarReservaNoArquivo(lab.getNome(), rTemp);
+                    } else {
+                        System.out.println("Erro: Já existe uma reserva nesse horário para esta estação");
+                    }
+
+                }catch (DateTimeParseException | ParametroNaoValidoException e){
+                    boolean entradaValida = false;
+                    while (!entradaValida){
+                        System.out.println("Horário ou data inválida, tente novamente: ");
+                        DateTimeFormatter formatoHorario = DateTimeFormatter.ofPattern("HH:mm");
+                        DateTimeFormatter formatoData = DateTimeFormatter.ofPattern("HH:mm");
+
+
+                        System.out.println("Informe a data de reserva: ");
+                        LocalDate data = LocalDate.parse(sc.nextLine(), formatoData);
+
+                        System.out.println("Informe o horário a ser reservado.");
+
+                        System.out.println("Início: ");
+                        LocalTime horarioInicio = LocalTime.parse(sc.nextLine(), formatoHorario);
+                        LocalDateTime inicioCompleto = LocalDateTime.of(data, horarioInicio);
+
+                        System.out.println("Fim: ");
+                        LocalTime horarioFim = LocalTime.parse(sc.nextLine(), formatoHorario);
+                        LocalDateTime fimCompleto = LocalDateTime.of(data, horarioFim);
+
+                        entradaValida = true;
+                    }
+                } catch (ReservaNaoDisponivelException e) {
+                    System.out.println("Erro ao reservar: " + e.getMessage());
                 }
+
+
                 break;
+
             default:
                 System.out.println("Opção inválida.");
+                return;
         }
 
     }
@@ -156,5 +216,63 @@ public class MenuProfessor {
 
             linha = br.readLine();
         }
+    }
+
+    private void salvarReservaNoArquivo(String nomeLab, Sistema.Lab_Est.Reserva reserva) {
+        try (
+                FileWriter fw = new FileWriter("src/Arquivos/ReservasLaboratorio.txt", true);
+                BufferedWriter bw = new BufferedWriter(fw);
+                PrintWriter out = new PrintWriter(bw);
+        ) {
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+            String linha = nomeLab + ", " +
+                    reserva.getUsuario().getMatricula() + ", " +
+                    reserva.getInicio().format(fmt) + ", " +
+                    reserva.getFim().format(fmt);
+
+            out.println(linha);
+
+        } catch (IOException e) {
+            System.out.println("Erro ao salvar reserva no arquivo: " + e.getMessage());
+        }
+    }
+
+    private void carregarReservasDoArquivo() {
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        try (BufferedReader br = new BufferedReader(new FileReader("src/Arquivos/ReservasLaboratorio.txt"))) {
+            String linha = br.readLine();
+
+            while (linha != null) {
+                String[] campos = linha.split(", ");
+                if (campos.length >= 4) {
+                    String nomeLab = campos[0].trim();
+                    String matriculaNoArquivo = campos[1].trim();
+                    LocalDateTime inicio = LocalDateTime.parse(campos[2].trim(), fmt);
+                    LocalDateTime fim = LocalDateTime.parse(campos[3].trim(), fmt);
+
+                    Laboratorio lab = buscarLaboratorio(nomeLab);
+
+                    if (lab != null) {
+                        if (matriculaNoArquivo.equals(this.professor.getMatricula())) {
+                            try {
+                                lab.adicionarReserva(this.professor, inicio, fim);
+                            } catch (Exception e) {}
+                        } else {
+                            Professor alunoFantasma = new Professor("Outro Professor", matriculaNoArquivo, "Padrao@123");
+                            try {
+                                lab.adicionarReserva(alunoFantasma, inicio, fim);
+                            } catch (Exception e) {}
+                        }
+                    }
+
+                }
+                linha = br.readLine();
+            }
+        } catch (IOException e) {
+            System.out.println("Nenhuma reserva anterior encontrada");
+        }
+
     }
 }
