@@ -75,7 +75,44 @@ public class Estacao {
     public void registrarManutencao(String descricao) {
         this.status = StatusEstacao.EM_MANUTENCAO;
         historicoManutencao.add("Data: " + LocalDateTime.now().toString() + " - " + descricao);
-        System.out.println("Manutenção registrada para Estação " + id);
+
+        List<Reserva> reservasParaCancelar = new LinkedList<>();
+        
+        LocalDateTime agora = LocalDateTime.now();
+
+        for (Reserva r : listaDeReservas) {
+            if (r.getFim().isAfter(agora)) {
+                reservasParaCancelar.add(r);
+            }
+        }
+
+        if (!reservasParaCancelar.isEmpty()) {
+            listaDeReservas.removeAll(reservasParaCancelar);
+            System.out.println("AVISO: " + reservasParaCancelar.size() + " reserva(s) futura(s) foram cancelada(s) devido à manutenção");
+        } else {
+            System.out.println("Manutenção registrada. Nenhuma reserva precisou ser cancelada");
+        }
+    }
+
+    public long calcularTotalHorasUso() {
+        long minutosTotais = 0;
+        for (Reserva r : listaDeReservas) {
+            long minutos = java.time.temporal.ChronoUnit.MINUTES.between(r.getInicio(), r.getFim());
+            minutosTotais += minutos;
+        }
+        return minutosTotais / 60; 
+    }
+
+    public double calcularTaxaOcupacao() {
+        long horasReservadas = calcularTotalHorasUso();
+        
+        /* Laboratório funciona 15h por dia (07:00 às 22:00), vamos calcular a taxa baseada em um ciclo mensal (30 dias) */
+        double horasDisponiveisNoMes = 15.0 * 30.0; 
+        
+        if (horasDisponiveisNoMes == 0) return 0.0;
+        
+        double taxa = (horasReservadas / horasDisponiveisNoMes) * 100;
+        return taxa;
     }
     
     @Override

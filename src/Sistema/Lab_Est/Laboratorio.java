@@ -103,7 +103,7 @@ public class Laboratorio {
 
     @Override
     public String toString() {
-        return "Laboratorio [nome=" + nome + ", status=" + status + ", estacoes=" + estacoes.size() + "/" + isFull() + "]";
+        return "Laboratório [nome = " + nome + ", status = " + status + ", estações = " + estacoes.size() + "/" + isFull() + "]";
     }
 
 }

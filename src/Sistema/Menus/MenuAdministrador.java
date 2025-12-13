@@ -16,6 +16,8 @@ import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class MenuAdministrador {
     private List<Laboratorio> todosOsLaboratorios;
@@ -27,6 +29,7 @@ public class MenuAdministrador {
                 BufferedReader br = new BufferedReader(fr);) {
             lerLaboratorios(br);
             carregarSoftwares();
+            carregarManutencoes();
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
@@ -39,11 +42,12 @@ public class MenuAdministrador {
             System.out.println("\n------ PAINEL DE ADMINISTRADOR ------");
             System.out.println("1. Gerenciar Laboratórios");
             System.out.println("2. Gerenciar Estações");
+            System.out.println("3. Relatórios e Estatísticas");
             System.out.println("0. Deslogar");
             System.out.print("Escolha: ");
 
             opcao = sc.nextInt();
-            sc.nextLine(); // Limpar buffer
+            sc.nextLine();
 
             switch (opcao) {
                 case 1:
@@ -52,11 +56,14 @@ public class MenuAdministrador {
                 case 2:
                     menuEstacoes(sc);
                     break;
+                case 3:
+                    menuRelatorios(sc); 
+                    break;
                 case 0:
                     System.out.println("Deslogando...");
                     break;
                 default:
-                    System.out.println("Opção inválida.");
+                    System.out.println("Opção inválida");
             }
         }
     }
@@ -68,7 +75,6 @@ public class MenuAdministrador {
         System.out.println("2. Bloquear Laboratório");
         System.out.println("3. Desbloquear Laboratório");
         System.out.println("4. Adicionar Laboratorio");
-        // ... (você pode adicionar "Cadastrar Novo Laboratório" aqui)
         System.out.print("Escolha: ");
         int op = sc.nextInt();
         sc.nextLine();
@@ -76,7 +82,6 @@ public class MenuAdministrador {
         if (op == 1) {
             listarLaboratorios();
         } else if (op == 2 || op == 3) {
-            // 3. Implementar funcionalidade de bloqueio
             System.out.print("Digite o nome do Laboratório (ex: LAB-01): ");
             String nome = sc.nextLine();
             Laboratorio lab = buscarLaboratorio(nome);
@@ -86,7 +91,7 @@ public class MenuAdministrador {
                 lab.setStatus(novoStatus);
                 System.out.println(lab.getNome() + " agora está " + lab.getStatus());
             } else {
-                System.out.println("Laboratório não encontrado.");
+                System.out.println("Laboratório não encontrado");
             }
         } else if (op == 4) {
 
@@ -153,6 +158,7 @@ public class MenuAdministrador {
                     String desc = sc.nextLine();
 
                     est.registrarManutencao(desc);
+                    salvarManutencaoNoArquivo(lab.getNome(), est.getId(), desc);
                 } else if (op == 3) {
                     // Bloquear Estação
                     est.setStatus(StatusEstacao.BLOQUEADA);
@@ -181,6 +187,64 @@ public class MenuAdministrador {
                 }
             } else {
                 System.out.println("Estação não encontrada");
+            }
+        }
+    }
+
+    // --- Sub-menu para Relatórios e Estatísticas ---
+    private void menuRelatorios(Scanner sc) {
+        System.out.println("\n-- Relatórios e Estatísticas --");
+        System.out.println("1. Tempo de Uso por Estação");
+        System.out.println("2. Histórico de Manutenção");
+        System.out.println("3. Taxa de Ocupação (visão geral)");
+        System.out.print("Escolha: ");
+        int op = sc.nextInt();
+        sc.nextLine();
+
+        System.out.println("\nSelecione o Laboratório:");
+        listarLaboratorios();
+        System.out.print("Nome do Lab: ");
+        String nomeLab = sc.nextLine();
+        
+        Laboratorio lab = buscarLaboratorio(nomeLab);
+        if (lab == null) {
+            System.out.println("Laboratório não encontrado");
+            return;
+        }
+
+        if (op == 1) {
+            System.out.println("\n--- Tempo Total de Uso ---");
+            for (Estacao est : lab.getEstacoes()) {
+                long horas = est.calcularTotalHorasUso();
+                System.out.println("Estação ID " + est.getId() + ": " + horas + " horas de uso acumulado");
+            }
+
+        } else if (op == 2) {
+            System.out.print("Digite o ID da Estação para ver o histórico: ");
+            int idEst = sc.nextInt();
+            sc.nextLine();
+            Estacao est = lab.getEstacaoPorId(idEst);
+
+            if (est != null) {
+                System.out.println("\n--- Histórico de Manutenção da Estação " + est.getId() + " ---");
+                List<String> historico = est.getHistoricoManutencao();
+                
+                if (historico.isEmpty()) {
+                    System.out.println("Nenhuma manutenção registrada");
+                } else {
+                    for (String registro : historico) {
+                        System.out.println(" " + registro);
+                    }
+                }
+            } else {
+                System.out.println("Estação não encontrada");
+            }
+
+        } else if (op == 3) {
+            System.out.println("\n--- Taxa de Ocupação ---");
+            for (Estacao est : lab.getEstacoes()) {
+                double taxa = est.calcularTaxaOcupacao();
+                System.out.printf("Estação ID %d: %.2f%% de ocupação\n", est.getId(), taxa);
             }
         }
     }
@@ -276,6 +340,48 @@ public class MenuAdministrador {
         } catch (IllegalArgumentException e) {
             System.out.println("Erro ao ler tipo de licença no arquivo");
         }
+    }
+
+    private void salvarManutencaoNoArquivo(String nomeLab, int idEstacao, String descricao) {
+        try (
+            FileWriter fw = new FileWriter("src/Arquivos/Manutencoes.txt", true); 
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter out = new PrintWriter(bw);
+        ) {
+            String dataHora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+            String linha = nomeLab + "," + idEstacao + "," + dataHora + "," + descricao;
+            out.println(linha);
+            
+        } catch (IOException e) {
+            System.out.println("Erro ao salvar manutenção: " + e.getMessage());
+        }
+    }
+
+    private void carregarManutencoes() {
+        try (BufferedReader br = new BufferedReader(new FileReader("src/Arquivos/Manutencoes.txt"))) {
+            String linha = br.readLine();
+
+            while (linha != null) {
+                if (!linha.trim().isEmpty()) {
+                    String[] campos = linha.split(",");
+                    if (campos.length >= 4) {
+                        String nomeLab = campos[0].trim();
+                        int idEstacao = Integer.parseInt(campos[1].trim());
+                        String dataHora = campos[2].trim();
+                        String descricao = campos[3].trim();
+
+                        Laboratorio lab = buscarLaboratorio(nomeLab);
+                        if (lab != null) {
+                            Estacao est = lab.getEstacaoPorId(idEstacao);
+                            if (est != null) {
+                                est.getHistoricoManutencao().add("Data: " + dataHora + " - " + descricao);
+                            }
+                        }
+                    }
+                }
+                linha = br.readLine();
+            }
+        } catch (IOException e) {}
     }
 
 }

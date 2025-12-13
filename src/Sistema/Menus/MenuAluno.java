@@ -3,7 +3,7 @@ package Sistema.Menus;
 import Sistema.Lab_Est.Laboratorio;
 import Sistema.Lab_Est.Estacao;
 import Sistema.Lab_Est.StatusEstacao;
-import Sistema.Usuarios.Aluno; 
+import Sistema.Usuarios.Aluno;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -25,7 +25,7 @@ import Excecoes.ReservaNaoDisponivelException;
 public class MenuAluno {
 
     private List<Laboratorio> todosOsLaboratorios;
-    private Aluno alunoLogado; 
+    private Aluno alunoLogado;
 
     public MenuAluno(Aluno aluno) {
         this.alunoLogado = aluno;
@@ -61,7 +61,7 @@ public class MenuAluno {
                     menuReservas(sc);
                     break;
                 case 3:
-                    listarMinhasReservas(); 
+                    listarMinhasReservas();
                     break;
                 case 4:
                     realizarCheckIn(sc);
@@ -82,45 +82,59 @@ public class MenuAluno {
     private void menuReservas(Scanner sc) {
         System.out.println("\n-- Fazer Reserva de Estação --");
 
-        // Formatadores separados
         DateTimeFormatter formatoHorario = DateTimeFormatter.ofPattern("HH:mm");
         DateTimeFormatter formatoData = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+        LocalDateTime inicioCompleto = null;
+        LocalDateTime fimCompleto = null;
+        boolean datasValidas = false;
+
+        while (!datasValidas) {
+            try {
+                System.out.print("Informe a data de início (dd/MM/yyyy): ");
+                LocalDate dataInicio = LocalDate.parse(sc.nextLine(), formatoData);
+
+                System.out.print("Informe a hora de início (HH:mm): ");
+                LocalTime horaInicio = LocalTime.parse(sc.nextLine(), formatoHorario);
+
+                inicioCompleto = LocalDateTime.of(dataInicio, horaInicio);
+
+                System.out.print("Informe a data de término (dd/MM/yyyy): ");
+                LocalDate dataFim = LocalDate.parse(sc.nextLine(), formatoData);
+
+                System.out.print("Informe a hora de término (HH:mm): ");
+                LocalTime horaFim = LocalTime.parse(sc.nextLine(), formatoHorario);
+
+                fimCompleto = LocalDateTime.of(dataFim, horaFim);
+
+                if (fimCompleto.isBefore(inicioCompleto) || fimCompleto.isEqual(inicioCompleto)) {
+                    System.out.println("Erro: O término deve ser depois do início");
+                    System.out.println("Por favor, preencha novamente.\n");
+                } else {
+                    datasValidas = true;
+                }
+
+            } catch (java.time.format.DateTimeParseException e) {
+                System.out.println("Formato inválido! Use dd/MM/yyyy para data e HH:mm para hora");
+                System.out.println("Tente novamente\n");
+            }
+        }
+
+        listarLaboratorios();
+        System.out.print("\nDigite o nome do Laboratório (ex: LAB-01): ");
+        String nomeLab = sc.nextLine();
+        Laboratorio lab = buscarLaboratorio(nomeLab);
+
+        if (lab == null) {
+            System.out.println("Laboratório não encontrado");
+            return;
+        }
+
+        System.out.print("Digite o ID da Estação que deseja reservar: ");
+        int idEstacao = Integer.parseInt(sc.nextLine());
+        Estacao estacao = lab.getEstacaoPorId(idEstacao);
+
         try {
-            System.out.println("Informe a Data de Início (dd/MM/yyyy): ");
-            LocalDate dataInicio = LocalDate.parse(sc.nextLine(), formatoData);
-
-            System.out.println("Informe a Hora de Início (HH:mm): ");
-            LocalTime horaInicio = LocalTime.parse(sc.nextLine(), formatoHorario);
-
-            LocalDateTime inicioCompleto = LocalDateTime.of(dataInicio, horaInicio);
-
-            System.out.println("Informe a Data de Término (dd/MM/yyyy): ");
-            LocalDate dataFim = LocalDate.parse(sc.nextLine(), formatoData);
-
-            System.out.println("Informe a Hora de Término (HH:mm): ");
-            LocalTime horaFim = LocalTime.parse(sc.nextLine(), formatoHorario);
-
-            LocalDateTime fimCompleto = LocalDateTime.of(dataFim, horaFim);
-
-            if (fimCompleto.isBefore(inicioCompleto) || fimCompleto.isEqual(inicioCompleto)) {
-                throw new ParametroNaoValidoException("Erro: O horário/data de término deve ser posterior ao início");
-            }
-
-            listarLaboratorios();
-            System.out.print("\nDigite o nome do Laboratório (ex: LAB-01): ");
-            String nomeLab = sc.nextLine();
-            Laboratorio lab = buscarLaboratorio(nomeLab);
-
-            if (lab == null) {
-                System.out.println("Laboratório não encontrado");
-                return;
-            }
-
-            System.out.print("Digite o ID da Estação que deseja reservar: ");
-            int idEstacao = Integer.parseInt(sc.nextLine());
-            Estacao estacao = lab.getEstacaoPorId(idEstacao);
-
             if (estacao != null) {
                 if (estacao.getStatus() == StatusEstacao.BLOQUEADA) {
                     System.out.println("Esta estação está em manutenção e não pode ser reservada");
@@ -131,14 +145,15 @@ public class MenuAluno {
 
                 if (reservou) {
                     System.out.println("Reserva realizada com sucesso!");
-                    Sistema.Lab_Est.Reserva rTemp = new Sistema.Lab_Est.Reserva(this.alunoLogado, inicioCompleto, fimCompleto);
+                    Sistema.Lab_Est.Reserva rTemp = new Sistema.Lab_Est.Reserva(this.alunoLogado, inicioCompleto,
+                            fimCompleto);
                     salvarReservaNoArquivo(lab.getNome(), estacao.getId(), rTemp);
                 } else {
                     System.out.println("Erro: Já existe uma reserva nesse horário para esta estação");
                 }
 
             } else {
-                System.out.println("Estação inválida.");
+                System.out.println("Estação inválida");
             }
 
         } catch (ReservaNaoDisponivelException e) {
@@ -197,7 +212,7 @@ public class MenuAluno {
     private void listarMinhasReservas() {
         System.out.println("\n------ MINHAS RESERVAS ------");
         boolean encontrou = false;
-        
+
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
         for (Laboratorio lab : todosOsLaboratorios) {
@@ -209,7 +224,7 @@ public class MenuAluno {
                         System.out.println("Estação ID:  " + est.getId());
                         System.out.println("Início:      " + r.getInicio().format(fmt));
                         System.out.println("Término:     " + r.getFim().format(fmt));
-                        
+
                         encontrou = true;
                     }
                 }
@@ -221,7 +236,7 @@ public class MenuAluno {
         }
         System.out.println("-----------------------------------------");
     }
-    
+
     private void carregarReservasDoArquivo() {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -244,12 +259,14 @@ public class MenuAluno {
                             if (matriculaNoArquivo.equals(this.alunoLogado.getMatricula())) {
                                 try {
                                     est.adicionarReserva(this.alunoLogado, inicio, fim);
-                                } catch (Exception e) {}
+                                } catch (Exception e) {
+                                }
                             } else {
                                 Aluno alunoFantasma = new Aluno("Outro Aluno", matriculaNoArquivo, "Padrao@123");
                                 try {
                                     est.adicionarReserva(alunoFantasma, inicio, fim);
-                                } catch (Exception e) {}
+                                } catch (Exception e) {
+                                }
                             }
                         }
                     }
@@ -285,7 +302,7 @@ public class MenuAluno {
     private void realizarCheckIn(Scanner sc) {
         System.out.println("\n-- Realizar Check-in --");
         System.out.println("Selecione uma reserva pendente para iniciar o uso:");
-       
+
         List<Sistema.Lab_Est.Reserva> reservasPendentes = new LinkedList<>();
         List<Estacao> estacoesDasReservas = new LinkedList<>();
         List<Laboratorio> labsDasReservas = new LinkedList<>();
@@ -296,12 +313,12 @@ public class MenuAluno {
         for (Laboratorio lab : todosOsLaboratorios) {
             for (Estacao est : lab.getEstacoes()) {
                 for (Sistema.Lab_Est.Reserva r : est.getReservas()) {
-                    if (r.getUsuario().getMatricula().equals(this.alunoLogado.getMatricula()) 
-                        && !r.isCheckInRealizado()) {
-                        
-                        System.out.println(contador + ". " + lab.getNome() + " - Estação " + est.getId() + 
-                                           " (" + r.getInicio().format(fmt) + " as " + r.getFim().format(fmt) + ")");
-                        
+                    if (r.getUsuario().getMatricula().equals(this.alunoLogado.getMatricula())
+                            && !r.isCheckInRealizado()) {
+
+                        System.out.println(contador + ". " + lab.getNome() + " - Estação " + est.getId() +
+                                " (" + r.getInicio().format(fmt) + " as " + r.getFim().format(fmt) + ")");
+
                         reservasPendentes.add(r);
                         estacoesDasReservas.add(est);
                         labsDasReservas.add(lab);
@@ -319,7 +336,7 @@ public class MenuAluno {
         System.out.print("Digite o número da reserva para confirmar presença: ");
         try {
             int escolha = Integer.parseInt(sc.nextLine());
-            
+
             if (escolha >= 1 && escolha <= reservasPendentes.size()) {
                 int index = escolha - 1;
                 Sistema.Lab_Est.Reserva reservaEscolhida = reservasPendentes.get(index);
@@ -327,7 +344,7 @@ public class MenuAluno {
                 Laboratorio labCorrespondente = labsDasReservas.get(index);
 
                 reservaEscolhida.setCheckInRealizado(true);
-                
+
                 System.out.println("Check-in realizado com sucesso!");
                 System.out.println("Sessão iniciada em: " + LocalDateTime.now().format(fmt));
 
@@ -342,31 +359,31 @@ public class MenuAluno {
 
     private void realizarCheckOut(Scanner sc) {
         System.out.println("\n-- Realizar Checkout --");
-        
+
         List<String> linhasDoArquivo = new LinkedList<>();
         boolean encontrouSessaoAberta = false;
         String linhaAtualizada = "";
-        
+
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
         try (BufferedReader br = new BufferedReader(new FileReader("src/Arquivos/Sessoes.txt"))) {
             String linha = br.readLine();
-            
+
             while (linha != null) {
                 if (!linha.trim().isEmpty()) {
                     String[] campos = linha.split(",");
-                    
+
                     if (campos.length == 6 && campos[2].trim().equals(this.alunoLogado.getMatricula())) {
-                        
+
                         if (!encontrouSessaoAberta) {
                             System.out.println("Encerrando sessão na " + campos[0] + " - Estação " + campos[1]);
-                            
+
                             String dataCheckOut = LocalDateTime.now().format(fmt);
                             linhaAtualizada = linha + "," + dataCheckOut;
-                            
+
                             linhasDoArquivo.add(linhaAtualizada);
                             encontrouSessaoAberta = true;
-                            
+
                             System.out.println("Checkout realizado às: " + dataCheckOut);
                         } else {
                             linhasDoArquivo.add(linha);
@@ -377,7 +394,7 @@ public class MenuAluno {
                 }
                 linha = br.readLine();
             }
-            
+
         } catch (IOException e) {
             System.out.println("Erro ao ler sessões: " + e.getMessage());
             return;
@@ -392,20 +409,19 @@ public class MenuAluno {
 
     private void salvarSessaoNoArquivo(String nomeLab, int idEstacao, Sistema.Lab_Est.Reserva r) {
         try (
-            FileWriter fw = new FileWriter("src/Arquivos/Sessoes.txt", true);
-            BufferedWriter bw = new BufferedWriter(fw);
-            PrintWriter out = new PrintWriter(bw);
-        ) {
+                FileWriter fw = new FileWriter("src/Arquivos/Sessoes.txt", true);
+                BufferedWriter bw = new BufferedWriter(fw);
+                PrintWriter out = new PrintWriter(bw);) {
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            String linha = nomeLab + "," + 
-                           idEstacao + "," + 
-                           r.getUsuario().getMatricula() + "," + 
-                           r.getInicio().format(fmt) + "," + 
-                           r.getFim().format(fmt) + "," +
-                           LocalDateTime.now().format(fmt);
-                           
+            String linha = nomeLab + ", " +
+                    idEstacao + ", " +
+                    r.getUsuario().getMatricula() + ", " +
+                    r.getInicio().format(fmt) + ", " +
+                    r.getFim().format(fmt) + ", " +
+                    LocalDateTime.now().format(fmt);
+
             out.println(linha);
-            
+
         } catch (IOException e) {
             System.out.println("Erro ao salvar sessão: " + e.getMessage());
         }
@@ -413,10 +429,9 @@ public class MenuAluno {
 
     private void reescreverArquivoSessoes(List<String> todasAsLinhas) {
         try (
-            FileWriter fw = new FileWriter("src/Arquivos/Sessoes.txt", false);
-            BufferedWriter bw = new BufferedWriter(fw);
-            PrintWriter out = new PrintWriter(bw);
-        ) {
+                FileWriter fw = new FileWriter("src/Arquivos/Sessoes.txt", false);
+                BufferedWriter bw = new BufferedWriter(fw);
+                PrintWriter out = new PrintWriter(bw);) {
             for (String linha : todasAsLinhas) {
                 out.println(linha);
             }

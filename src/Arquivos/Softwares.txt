@@ -1,1 +1,2 @@
 LAB-01,8,Spotify,9.1.2,GRATUITA
+LAB-01,1,Netflix,9.46.1,GRATUITA
