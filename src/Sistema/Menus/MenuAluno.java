@@ -240,7 +240,7 @@ public class MenuAluno {
     private void carregarReservasDoArquivo() {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-        try (BufferedReader br = new BufferedReader(new FileReader("src/Arquivos/ReservasEstacao.txt"))) {
+        try (BufferedReader br = new BufferedReader(new FileReader("src/Arquivos/Reservas.txt"))) {
             String linha = br.readLine();
 
             while (linha != null) {
@@ -280,7 +280,7 @@ public class MenuAluno {
     }
     private void salvarReservaNoArquivo(String nomeLab, int idEstacao, Sistema.Lab_Est.Reserva reserva) {
         try (
-                FileWriter fw = new FileWriter("src/Arquivos/ReservasEstacao.txt", true);
+                FileWriter fw = new FileWriter("src/Arquivos/Reservas.txt", true);
                 BufferedWriter bw = new BufferedWriter(fw);
                 PrintWriter out = new PrintWriter(bw);
         ) {
