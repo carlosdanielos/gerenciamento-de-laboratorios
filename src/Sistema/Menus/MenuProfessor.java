@@ -92,6 +92,7 @@ public class MenuProfessor {
 
                 inicioCompleto = LocalDateTime.of(data, horaInicio);
 
+
                 System.out.print("Informe a hora de término (HH:mm): ");
                 LocalTime horaFim = LocalTime.parse(sc.nextLine(), formatoHorario);
 
@@ -125,37 +126,6 @@ public class MenuProfessor {
         Estacao estacao = lab.getEstacaoPorId(idEstacao);
 
         try {
-            System.out.println("Informe a Data de Início (dd/MM/yyyy): ");
-            LocalDate data = LocalDate.parse(sc.nextLine(), formatoData);
-
-            System.out.println("Informe a Hora de Início (HH:mm): ");
-            LocalTime horaInicio = LocalTime.parse(sc.nextLine(), formatoHorario);
-
-            inicioCompleto = LocalDateTime.of(data, horaInicio);
-
-            System.out.println("Informe a Hora de Término (HH:mm): ");
-            LocalTime horaFim = LocalTime.parse(sc.nextLine(), formatoHorario);
-
-            fimCompleto = LocalDateTime.of(data, horaFim);
-
-            if (fimCompleto.isBefore(inicioCompleto) || fimCompleto.isEqual(inicioCompleto)) {
-                throw new ParametroNaoValidoException("Erro: O horário/data de término deve ser posterior ao início");
-            }
-
-            listarLaboratorios();
-            System.out.print("\nDigite o nome do Laboratório (ex: H401): ");
-            nomeLab = sc.nextLine();
-            lab = buscarLaboratorio(nomeLab);
-
-            if (lab == null) {
-                System.out.println("Laboratório não encontrado");
-                return;
-            }
-
-            System.out.print("Digite o ID da Estação que deseja reservar: ");
-            idEstacao = Integer.parseInt(sc.nextLine());
-            estacao = lab.getEstacaoPorId(idEstacao);
-
             if (estacao != null) {
                 if (estacao.getStatus() == StatusEstacao.BLOQUEADA) {
                     System.out.println("Esta estação está em manutenção e não pode ser reservada");

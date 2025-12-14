@@ -92,20 +92,18 @@ public class MenuAluno {
         while (!datasValidas) {
             try {
                 System.out.print("Informe a data de início (dd/MM/yyyy): ");
-                LocalDate dataInicio = LocalDate.parse(sc.nextLine(), formatoData);
+                LocalDate data = LocalDate.parse(sc.nextLine(), formatoData);
 
                 System.out.print("Informe a hora de início (HH:mm): ");
                 LocalTime horaInicio = LocalTime.parse(sc.nextLine(), formatoHorario);
 
-                inicioCompleto = LocalDateTime.of(dataInicio, horaInicio);
+                inicioCompleto = LocalDateTime.of(data, horaInicio);
 
-                System.out.print("Informe a data de término (dd/MM/yyyy): ");
-                LocalDate dataFim = LocalDate.parse(sc.nextLine(), formatoData);
 
                 System.out.print("Informe a hora de término (HH:mm): ");
                 LocalTime horaFim = LocalTime.parse(sc.nextLine(), formatoHorario);
 
-                fimCompleto = LocalDateTime.of(dataFim, horaFim);
+                fimCompleto = LocalDateTime.of(data, horaFim);
 
                 if (fimCompleto.isBefore(inicioCompleto) || fimCompleto.isEqual(inicioCompleto)) {
                     System.out.println("Erro: O término deve ser depois do início");
