@@ -119,7 +119,7 @@ public class MenuAluno {
         }
 
         listarLaboratorios();
-        System.out.print("\nDigite o nome do Laboratório (ex: LAB-01): ");
+        System.out.print("\nDigite o nome do Laboratório (ex: H401): ");
         String nomeLab = sc.nextLine();
         Laboratorio lab = buscarLaboratorio(nomeLab);
 

@@ -82,7 +82,7 @@ public class MenuAdministrador {
         if (op == 1) {
             listarLaboratorios();
         } else if (op == 2 || op == 3) {
-            System.out.print("Digite o nome do Laboratório (ex: LAB-01): ");
+            System.out.print("Digite o nome do Laboratório (ex: H401): ");
             String nome = sc.nextLine();
             Laboratorio lab = buscarLaboratorio(nome);
 
@@ -133,7 +133,7 @@ public class MenuAdministrador {
         sc.nextLine();
 
         listarLaboratorios();
-        System.out.print("Digite o nome do Laboratório (ex: LAB-01): ");
+        System.out.print("Digite o nome do Laboratório (ex: H401): ");
         String nomeLab = sc.nextLine();
         Laboratorio lab = buscarLaboratorio(nomeLab);
         if (lab == null) {
